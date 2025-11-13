@@ -13,7 +13,7 @@ import json
 url = "https://openpricengine.com/api/v1/stores/products/names?stores=traderjoes"
 headers = {
     "accept": "application/json",
-    "Authorization": "649502d3-926b-4924-ab1b-ec3d1adff62e"
+    "Authorization": ${{ secrets.OPENPRICE_API_KEY }}
 }
 
 # Change all_data to be a list to store multiple product entries
