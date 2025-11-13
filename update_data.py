@@ -10,53 +10,59 @@ Original file is located at
 import requests
 import json
 
-url = "https://openpricengine.com/api/v1/stores/products/names?stores=traderjoes"
-headers = {
-    "accept": "application/json",
-    "Authorization": api_key
-}
-
-# Change all_data to be a list to store multiple product entries
-all_data = [] # Will now store a list of dictionaries, each representing a product
-
-response = requests.get(url, headers=headers)
-stores = response.json()
-
-url2 = "https://openpricengine.com/api/v1/traderjoes/products/prices/today"
-
-care = ['Product URL','Image URL','Price over time']
-
-# Ensure 'Traderjoes' key exists and its value is a list
-if "Traderjoes" in stores and isinstance(stores["Traderjoes"], list):
-    for item_name in stores["Traderjoes"]:
-        response2 = requests.get(url2, headers=headers, params={"productname": item_name})
-        cur_item_details = response2.json()
-
-        # Check if cur_item_details is a list and contains at least one item
-        if isinstance(cur_item_details, list) and len(cur_item_details) > 0:
-            product_entry = {"Product Name": item_name} # Add product name to the entry
-            for header in care:
-                if header in cur_item_details[0]: # Check if header exists in the product details
-                  if header == "Price over time":
-                        product_entry["Price"] = cur_item_details[0][header][0]["Price"]
-                  else:
-                    product_entry[header] = cur_item_details[0][header]
-                else:
-                    product_entry[header] = None # Or "N/A" if preferred, to indicate missing data
-            all_data.append(product_entry) # Append the complete product entry to the list
-        else:
-            print(f"Skipping product '{item_name}': No details found or API returned an error: {cur_item_details}")
-else:
-    print("No 'Traderjoes' key found in stores data or it's not a list.")
-
-# Changed this print loop to iterate through the collected products in all_data
-for product in all_data:
-    print(product)
+def fetch_groceries():
+    api_key = os.getenv("API_KEY")
+    if not api_key:
+        raise ValueError("API_KEY not found. Make sure it is set in GitHub Secrets.")
 
 
-# Save JSON to Colab environment
-with open("groceries.json", "w") as f:
-    json.dump(all_data, f, indent=4)
-
-print("groceries.json generated successfully!")
-
+    url = "https://openpricengine.com/api/v1/stores/products/names?stores=traderjoes"
+    headers = {
+        "accept": "application/json",
+        "Authorization": api_key
+    }
+    
+    # Change all_data to be a list to store multiple product entries
+    all_data = [] # Will now store a list of dictionaries, each representing a product
+    
+    response = requests.get(url, headers=headers)
+    stores = response.json()
+    
+    url2 = "https://openpricengine.com/api/v1/traderjoes/products/prices/today"
+    
+    care = ['Product URL','Image URL','Price over time']
+    
+    # Ensure 'Traderjoes' key exists and its value is a list
+    if "Traderjoes" in stores and isinstance(stores["Traderjoes"], list):
+        for item_name in stores["Traderjoes"]:
+            response2 = requests.get(url2, headers=headers, params={"productname": item_name})
+            cur_item_details = response2.json()
+    
+            # Check if cur_item_details is a list and contains at least one item
+            if isinstance(cur_item_details, list) and len(cur_item_details) > 0:
+                product_entry = {"Product Name": item_name} # Add product name to the entry
+                for header in care:
+                    if header in cur_item_details[0]: # Check if header exists in the product details
+                      if header == "Price over time":
+                            product_entry["Price"] = cur_item_details[0][header][0]["Price"]
+                      else:
+                        product_entry[header] = cur_item_details[0][header]
+                    else:
+                        product_entry[header] = None # Or "N/A" if preferred, to indicate missing data
+                all_data.append(product_entry) # Append the complete product entry to the list
+            else:
+                print(f"Skipping product '{item_name}': No details found or API returned an error: {cur_item_details}")
+    else:
+        print("No 'Traderjoes' key found in stores data or it's not a list.")
+    
+    # Changed this print loop to iterate through the collected products in all_data
+    for product in all_data:
+        print(product)
+    
+    
+    # Save JSON to Colab environment
+    with open("groceries.json", "w") as f:
+        json.dump(all_data, f, indent=4)
+    
+    print("groceries.json generated successfully!")
+    
